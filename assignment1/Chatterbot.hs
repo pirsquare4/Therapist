@@ -2,6 +2,7 @@ module Chatterbot where
 import Utilities
 import System.Random
 import Data.Char
+import Data.Maybe
 
 chatterbot :: String -> [(String, [String])] -> IO ()
 chatterbot botName botRules = do
@@ -118,18 +119,35 @@ replaceList b c d
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match _ _ _ = Nothing
+match wild pat sent = match2 wild pat sent pat sent
+{- TO BE WRITTEN -}
+
+match2 :: Eq a => a -> [a] -> [a] -> [a] ->[a]-> Maybe [a]
+match2 wild pat sent oripat orisent
+  | pat == [] && sent == [] = (Just (extractJust wild oripat orisent []))
+  | pat == [] = Nothing
+  | sent == [] = Nothing
+  | (pat !! 0 /= wild) && ((pat !! 0) /= (sent !! 0)) = Nothing
+  | (pat !! 0 /= wild) && ((pat !! 0) == (sent !! 0)) = match2 wild (tail pat) (tail sent) oripat orisent
+  | isJust (singleWildcardMatch pat sent wild oripat orisent ) = singleWildcardMatch pat sent wild oripat orisent
+  | isJust(longerWildcardMatch pat sent wild oripat orisent) = longerWildcardMatch pat sent wild oripat orisent
+  | otherwise = Nothing
 {- TO BE WRITTEN -}
 
 
 -- Helper function to match
-singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
-singleWildcardMatch (wc:ps) (x:xs) = Nothing
+singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> a -> [a] -> [a]-> Maybe [a]
+singleWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild ps xs oripat orisent
 {- TO BE WRITTEN -}
-longerWildcardMatch (wc:ps) (x:xs) = Nothing
+longerWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild (wc:ps) xs oripat orisent
 {- TO BE WRITTEN -}
 
-
+extractJust :: Eq a => a -> [a] -> [a] -> [a] -> [a]
+extractJust wild pat sent saved
+  | pat == [] && sent == [] = saved
+  | (pat !! 0 /= wild) && ((pat !! 0) == (sent !! 0)) = extractJust wild (tail pat) (tail sent) saved
+  | isJust (match2 wild (tail pat) (tail sent) pat sent) = saved ++ [(head sent)]
+  | otherwise = extractJust wild pat (tail sent) saved ++ [(head sent)]
 
 -- Test cases --------------------
 
