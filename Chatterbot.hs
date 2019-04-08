@@ -107,10 +107,8 @@ reductionsApply _ = id
 -- Replaces a wildcard in a list with the list given as the third argument
 substitute :: Eq a => a -> [a] -> [a] -> [a]
 substitute wildcard t s = concat [ replaceList x wildcard s| x <- t]
---   where
---     f x | x == wildcard = s 
---         | otherwise     = x
 
+-- Helper function for substitute
 replaceList :: Eq a => a -> a -> [a] -> [a]
 replaceList b c d 
   | b == c    = d
@@ -131,16 +129,15 @@ match2 wild pat sent oripat orisent
   | isJust (singleWildcardMatch pat sent wild oripat orisent ) = singleWildcardMatch pat sent wild oripat orisent
   | isJust(longerWildcardMatch pat sent wild oripat orisent) = longerWildcardMatch pat sent wild oripat orisent
   | otherwise = Nothing
-{- TO BE WRITTEN -}
-
 
 -- Helper function to match
 singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> a -> [a] -> [a]-> Maybe [a]
-singleWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild ps xs oripat orisent
-{- TO BE WRITTEN -}
-longerWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild (wc:ps) xs oripat orisent
-{- TO BE WRITTEN -}
 
+singleWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild ps xs oripat orisent
+
+longerWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild (wc:ps) xs oripat orisent
+
+-- Another helper function to match
 extractJust :: Eq a => a -> [a] -> [a] -> [a] -> [a]
 extractJust wild pat sent saved
   | pat == [] && sent == [] = saved
@@ -173,7 +170,6 @@ transformationApply wild func sent tuple
    | otherwise = Nothing
    where 
     matched = match wild (fst tuple) sent
-{- TO BE WRITTEN -}
 
 
 -- Applying a list of patterns until one succeeds
@@ -184,6 +180,4 @@ transformationsApply wild func tupleList sent
    |otherwise = transformationsApply wild func (tail tupleList) sent
    where
    	transform = transformationApply wild func sent (head tupleList)
-{- TO BE WRITTEN -}
-
 
