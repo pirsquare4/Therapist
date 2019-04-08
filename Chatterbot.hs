@@ -120,7 +120,6 @@ replaceList b c d
 -- bound to the wildcard in the pattern list.
 match :: Eq a => a -> [a] -> [a] -> Maybe [a]
 match wild pat sent = match2 wild pat sent pat sent
-{- TO BE WRITTEN -}
 
 match2 :: Eq a => a -> [a] -> [a] -> [a] ->[a]-> Maybe [a]
 match2 wild pat sent oripat orisent
@@ -170,13 +169,21 @@ matchCheck = matchTest == Just testSubstitutions
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
 transformationApply wild func sent tuple
-	| otherwise = Nothing
+   | isJust(matched) = mmap (substitute wild (snd tuple)) (mmap func matched)
+   | otherwise = Nothing
+   where 
+    matched = match wild (fst tuple) sent
 {- TO BE WRITTEN -}
 
 
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
-transformationsApply _ _ _ _ = Nothing
+transformationsApply wild func tupleList sent
+   |isJust(transform) = transform
+   |tail tupleList == [] = Nothing
+   |otherwise = transformationsApply wild func (tail tupleList) sent
+   where
+   	transform = transformationApply wild func sent (head tupleList)
 {- TO BE WRITTEN -}
 
 
