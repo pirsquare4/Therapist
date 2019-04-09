@@ -112,11 +112,10 @@ reduce = reductionsApply reductions
 reductionsApply :: [PhrasePair] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
 reductionsApply rules phrase
-   |isJust transform2 = reductionsApply rules transform
-   |otherwise = phrase
+   |phrase == transform = phrase
+   |otherwise = reductionsApply rules transform
    where
-   	transform = try (transformationsApply "*" id rules) phrase
-   	transform2 = transformationsApply "*" id rules phrase
+    transform = try (transformationsApply "*" id rules) phrase
 
 
 -------------------------------------------------------
