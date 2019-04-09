@@ -13,7 +13,6 @@ chatterbot botName botRules = do
     botloop = do
       putStr "\n: "
       question <- getLine
-      putStrLn ( present (prepare question))
       answer <- stateOfMind brain
       putStrLn (botName ++ ": " ++ (present . answer . prepare) question)
       if (not . endOfDialog) question then botloop else return ()
@@ -39,7 +38,7 @@ rulesApply rules sentence
   | sent == sentence = []
   | otherwise  = sent
     where
-      sent = (try . (transformationsApply "*" reflect )) rules sentence
+      sent = (try . transformationsApply "*" reflect ) rules sentence
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
@@ -85,7 +84,7 @@ prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 
 rulesCompile :: [(String, [String])] -> BotBrain
 {- TO BE WRITTEN -}
-rulesCompile rules = (map  (map2 ((words . (map  toLower)), map words)) rules)
+rulesCompile = map  (map2 (words . map  toLower, map words))
 
 
 --------------------------------------
@@ -139,11 +138,11 @@ match wild pat sent = match2 wild pat sent pat sent
 
 match2 :: Eq a => a -> [a] -> [a] -> [a] ->[a]-> Maybe [a]
 match2 wild pat sent oripat orisent
-  | pat == [] && sent == [] = (Just (extractJust wild oripat orisent []))
-  | pat == [] = Nothing
-  | sent == [] = Nothing
-  | (pat !! 0 /= wild) && ((pat !! 0) /= (sent !! 0)) = Nothing
-  | (pat !! 0 /= wild) && ((pat !! 0) == (sent !! 0)) = match2 wild (tail pat) (tail sent) oripat orisent
+  | null pat && null sent = Just (extractJust wild oripat orisent [])
+  | null pat = Nothing
+  | null sent = Nothing
+  | (head pat /= wild) && (head pat /= head sent) = Nothing
+  | (head pat /= wild) && (head pat == head sent) = match2 wild (tail pat) (tail sent) oripat orisent
   | isJust (singleWildcardMatch pat sent wild oripat orisent ) = singleWildcardMatch pat sent wild oripat orisent
   | isJust(longerWildcardMatch pat sent wild oripat orisent) = longerWildcardMatch pat sent wild oripat orisent
   | otherwise = Nothing
@@ -151,17 +150,17 @@ match2 wild pat sent oripat orisent
 -- Helper function to match
 singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> a -> [a] -> [a]-> Maybe [a]
 
-singleWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild ps xs oripat orisent
+singleWildcardMatch (wc:ps) (x:xs) wild = match2 wild ps xs
 
-longerWildcardMatch (wc:ps) (x:xs) wild oripat orisent = match2 wild (wc:ps) xs oripat orisent
+longerWildcardMatch (wc:ps) (x:xs) wild = match2 wild (wc:ps) xs
 
 -- Another helper function to match
 extractJust :: Eq a => a -> [a] -> [a] -> [a] -> [a]
 extractJust wild pat sent saved
-  | pat == [] && sent == [] = saved
-  | (pat !! 0 /= wild) && ((pat !! 0) == (sent !! 0)) = extractJust wild (tail pat) (tail sent) saved
-  | isJust (match2 wild (tail pat) (tail sent) pat sent) = saved ++ [(head sent)]
-  | otherwise = extractJust wild pat (tail sent) (saved ++ [(head sent)])
+  | null pat && null sent = saved
+  | (head pat /= wild) && (head pat == head sent) = extractJust wild (tail pat) (tail sent) saved
+  | isJust (match2 wild (tail pat) (tail sent) pat sent) = saved ++ [head sent]
+  | otherwise = extractJust wild pat (tail sent) (saved ++ [head sent])
 
 -- Test cases --------------------
 
@@ -184,7 +183,7 @@ matchCheck = matchTest == Just testSubstitutions
 -- Applying a single pattern
 transformationApply :: Eq a => a -> ([a] -> [a]) -> [a] -> ([a], [a]) -> Maybe [a]
 transformationApply wild func sent tuple
-   | isJust(matched) = mmap (substitute wild (snd tuple)) (mmap func matched)
+   | isJust matched = mmap (substitute wild (snd tuple)) (mmap func matched)
    | otherwise = Nothing
    where 
     matched = match wild (fst tuple) sent
@@ -193,8 +192,8 @@ transformationApply wild func sent tuple
 -- Applying a list of patterns until one succeeds
 transformationsApply :: Eq a => a -> ([a] -> [a]) -> [([a], [a])] -> [a] -> Maybe [a]
 transformationsApply wild func tupleList sent
-   |isJust(transform) = transform
-   |tail tupleList == [] = Nothing
+   |isJust transform = transform
+   |null (tail tupleList)  = Nothing
    |otherwise = transformationsApply wild func (tail tupleList) sent
    where
     transform = transformationApply wild func sent (head tupleList)
