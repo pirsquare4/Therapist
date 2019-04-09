@@ -13,6 +13,7 @@ chatterbot botName botRules = do
     botloop = do
       putStr "\n: "
       question <- getLine
+      putStrLn ( present (prepare question))
       answer <- stateOfMind brain
       putStrLn (botName ++ ": " ++ (present . answer . prepare) question)
       if (not . endOfDialog) question then botloop else return ()
@@ -34,7 +35,11 @@ stateOfMind brain  = do
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply rules sentence = (try . (transformationsApply "*" reflect )) rules sentence
+rulesApply rules sentence 
+  | sent == sentence = []
+  | otherwise  = sent
+    where
+      sent = (try . (transformationsApply "*" reflect )) rules sentence
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
@@ -80,7 +85,7 @@ prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 
 rulesCompile :: [(String, [String])] -> BotBrain
 {- TO BE WRITTEN -}
-rulesCompile rules = (map  (map2 (words, map words)) rules)
+rulesCompile rules = (map  (map2 ((words . (map  toLower)), map words)) rules)
 
 
 --------------------------------------

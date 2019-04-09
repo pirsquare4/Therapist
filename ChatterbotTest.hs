@@ -10,6 +10,7 @@ module Main where
     ]
 
   transformations = [(words "I hate *", words "Why do you hate * ?")]
+  -- transformations = [(words "I love *", words "Why do you love * ?")]
 
   rulesApplyTest =
     test [
