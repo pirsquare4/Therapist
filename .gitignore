@@ -2,3 +2,5 @@
 chatter
 main
 *.exe
+*.idea*
+*.hi
