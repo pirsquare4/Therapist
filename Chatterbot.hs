@@ -28,15 +28,24 @@ type BotBrain = [(Phrase, [Phrase])]
 
 stateOfMind :: BotBrain -> IO (Phrase -> Phrase)
 {- TO BE WRITTEN -}
-stateOfMind _ = return id
+stateOfMind brain  = do
+  r <- randomIO :: IO Float
+  return (rulesApply [map2 (id, pick r) rule | rule <- brain])
 
 rulesApply :: [PhrasePair] -> Phrase -> Phrase
 {- TO BE WRITTEN -}
-rulesApply _ = id
+rulesApply rules sentence = (try . (transformationsApply "*" reflect )) rules sentence
 
 reflect :: Phrase -> Phrase
 {- TO BE WRITTEN -}
-reflect = id
+reflect sentence = [replaceWord word reflections | word <- sentence]
+
+
+replaceWord :: String -> [(String, String)] ->  String
+replaceWord word [] = word
+replaceWord word (x:xs)
+  | word == fst x = snd x
+  | otherwise = replaceWord word xs
 
 reflections =
   [ ("am",     "are"),
@@ -71,7 +80,7 @@ prepare = reduce . words . map toLower . filter (not . flip elem ".,:;*!#%&|")
 
 rulesCompile :: [(String, [String])] -> BotBrain
 {- TO BE WRITTEN -}
-rulesCompile _ = []
+rulesCompile rules = (map  (map2 (words, map words)) rules)
 
 
 --------------------------------------
@@ -179,5 +188,5 @@ transformationsApply wild func tupleList sent
    |tail tupleList == [] = Nothing
    |otherwise = transformationsApply wild func (tail tupleList) sent
    where
-   	transform = transformationApply wild func sent (head tupleList)
+    transform = transformationApply wild func sent (head tupleList)
 
