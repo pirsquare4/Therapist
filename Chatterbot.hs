@@ -133,34 +133,53 @@ replaceList b c d
 
 -- Tries to match two lists. If they match, the result consists of the sublist
 -- bound to the wildcard in the pattern list.
-match :: Eq a => a -> [a] -> [a] -> Maybe [a]
-match wild pat sent = match2 wild pat sent pat sent
+-- match :: Eq a => a -> [a] -> [a] -> Maybe [a]
+-- match wild pat sent = match2 wild pat sent pat sent
 
-match2 :: Eq a => a -> [a] -> [a] -> [a] ->[a]-> Maybe [a]
-match2 wild pat sent oripat orisent
-  | null pat && null sent = Just (extractJust wild oripat orisent [])
-  | null pat = Nothing
-  | null sent = Nothing
-  | (head pat /= wild) && (head pat /= head sent) = Nothing
-  | (head pat /= wild) && (head pat == head sent) = match2 wild (tail pat) (tail sent) oripat orisent
-  | isJust (singleWildcardMatch pat sent wild oripat orisent ) = singleWildcardMatch pat sent wild oripat orisent
-  | isJust(longerWildcardMatch pat sent wild oripat orisent) = longerWildcardMatch pat sent wild oripat orisent
-  | otherwise = Nothing
+-- match2 :: Eq a => a -> [a] -> [a] -> [a] ->[a]-> Maybe [a]
+-- match2 wild pat sent oripat orisent
+--   | null pat && null sent = Just (extractJust wild oripat orisent [])
+--   | null pat = Nothing
+--   | null sent = Nothing
+--   | (head pat /= wild) && (head pat /= head sent) = Nothing
+--   | (head pat /= wild) && (head pat == head sent) = match2 wild (tail pat) (tail sent) oripat orisent
+--   | isJust (singleWildcardMatch pat sent wild oripat orisent ) = singleWildcardMatch pat sent wild oripat orisent
+--   | isJust(longerWildcardMatch pat sent wild oripat orisent) = longerWildcardMatch pat sent wild oripat orisent
+--   | otherwise = Nothing
 
 -- Helper function to match
-singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> a -> [a] -> [a]-> Maybe [a]
+-- singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> a -> [a] -> [a]-> Maybe [a]
 
-singleWildcardMatch (wc:ps) (x:xs) wild = match2 wild ps xs
+-- singleWildcardMatch (wc:ps) (x:xs) wild = match2 wild ps xs
 
-longerWildcardMatch (wc:ps) (x:xs) wild = match2 wild (wc:ps) xs
+-- longerWildcardMatch (wc:ps) (x:xs) wild = match2 wild (wc:ps) xs
+
+
 
 -- Another helper function to match
-extractJust :: Eq a => a -> [a] -> [a] -> [a] -> [a]
-extractJust wild pat sent saved
-  | null pat && null sent = saved
-  | (head pat /= wild) && (head pat == head sent) = extractJust wild (tail pat) (tail sent) saved
-  | isJust (match2 wild (tail pat) (tail sent) pat sent) = saved ++ [head sent]
-  | otherwise = extractJust wild pat (tail sent) (saved ++ [head sent])
+-- extractJust :: Eq a => a -> [a] -> [a] -> [a] -> [a]
+-- extractJust wild pat sent saved
+--   | null pat && null sent = saved
+--   | (head pat /= wild) && (head pat == head sent) = extractJust wild (tail pat) (tail sent) saved
+--   | isJust (match2 wild (tail pat) (tail sent) pat sent) = saved ++ [head sent]
+--   | otherwise = extractJust wild pat (tail sent) (saved ++ [head sent])
+
+-- new elegant solution. Ignore previous working code.
+match :: Eq a => a -> [a] -> [a] -> Maybe [a]
+match _ [] [] = Just []
+match _ [] _ = Nothing
+match _ _ [] = Nothing
+match wild pat sent
+          | head pat == head sent = match wild (tail pat) (tail sent)
+          | head pat /= wild = Nothing
+          | otherwise = orElse (singleWildcardMatch pat sent) (longerWildcardMatch pat sent)
+
+
+-- Helper function to match
+singleWildcardMatch, longerWildcardMatch :: Eq a => [a] -> [a] -> Maybe [a]
+singleWildcardMatch (wc:ps) (x:xs) = mmap (const [x]) (match wc ps xs)
+longerWildcardMatch (wc:ps) (x:xs) = mmap (x:) (match wc (wc:ps) xs)
+
 
 -- Test cases --------------------
 
